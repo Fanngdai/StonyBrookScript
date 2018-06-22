@@ -286,7 +286,7 @@ t_ADD = r'\+'
 t_SUB = r'-'
 t_MUL = r'\*'
 t_DIV = r'/'
-t_FLDIV = r'\\'
+t_FLDIV = r'//'
 t_MOD = r'%'
 t_POW = r'\*\*'
 t_LBRACKET = r'\['
@@ -312,7 +312,7 @@ def t_BOOL(t):
     return t
 
 def t_STR(t):
-    r'("([^\\"]*|\\.)*")|(\'([^\\"]*|\\.)*\')'
+    r'((\"[^\"]*\")|(\'[^\']*\'))'
     t.value = strNode(t.value)
     return t
 
