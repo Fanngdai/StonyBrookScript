@@ -103,10 +103,10 @@ class andOp(Node):
 
 class notOp(Node):
     def __init__(self, v):
-        self.v = v
+        self.v = v.evaluate()
 
     def evaluate(self):
-        if isinstance(self.left, bool) and isinstance(self.right, bool):
+        if isinstance(self.v, bool):
             return not self.v
         else:
             raise SemanticError()
@@ -154,11 +154,13 @@ class addOp(Node):
     def evaluate(self):
         if isinstance(self.left, int) and isinstance(self.right, int) or \
             isinstance(self.left, float) and isinstance(self.right, float) or \
+            isinstance(self.left, int) and isinstance(self.right, float) or \
+            isinstance(self.left, float) and isinstance(self.right, int) or \
             isinstance(self.left, str) and isinstance(self.right, str) or \
             isinstance(self.left, list) and isinstance(self.right, list):
             return self.left + self.right
         else:
-            raise SemanticError()
+            raise SyntaxError()
 
 class subOp(Node):
     def __init__(self, left, right):
@@ -167,6 +169,8 @@ class subOp(Node):
 
     def evaluate(self):
         if isinstance(self.left, int) and isinstance(self.right, int) or \
+            isinstance(self.left, float) and isinstance(self.right, int) or \
+            isinstance(self.left, int) and isinstance(self.right, float) or \
             isinstance(self.left, float) and isinstance(self.right, float):
             return self.left - self.right
         else:
@@ -179,6 +183,8 @@ class flDivOp(Node):
 
     def evaluate(self):
         if isinstance(self.left, int) and isinstance(self.right, int) or \
+            isinstance(self.left, float) and isinstance(self.right, int) or \
+            isinstance(self.left, int) and isinstance(self.right, float) or \
             isinstance(self.left, float) and isinstance(self.right, float) or \
             self.right != 0:
             return self.left // self.right
@@ -192,6 +198,8 @@ class modOp(Node):
 
     def evaluate(self):
         if isinstance(self.left, int) and isinstance(self.right, int) or \
+            isinstance(self.left, float) and isinstance(self.right, int) or \
+            isinstance(self.left, int) and isinstance(self.right, float) or \
             isinstance(self.left, float) and isinstance(self.right, float) or \
             self.right != 0:
             return self.left % self.right
@@ -213,6 +221,8 @@ class mulOp(Node):
 
     def evaluate(self):
         if isinstance(self.left, int) and isinstance(self.right, int) or \
+            isinstance(self.left, float) and isinstance(self.right, int) or \
+            isinstance(self.left, int) and isinstance(self.right, float) or \
             isinstance(self.left, float) and isinstance(self.right, float):
             return self.left * self.right
         else:
@@ -225,6 +235,8 @@ class divOp(Node):
 
     def evaluate(self):
         if isinstance(self.left, int) and isinstance(self.right, int) or \
+            isinstance(self.left, float) and isinstance(self.right, int) or \
+            isinstance(self.left, int) and isinstance(self.right, float) or \
             isinstance(self.left, float) and isinstance(self.right, float) or \
             self.right != 0:
             return self.left / self.right
@@ -300,7 +312,7 @@ def t_BOOL(t):
     return t
 
 def t_STR(t):
-    r'"([^\\"]*|\\.)*"'
+    r'("([^\\"]*|\\.)*")|(\'([^\\"]*|\\.)*\')'
     t.value = strNode(t.value)
     return t
 
@@ -343,16 +355,17 @@ def p_expression_type(t):
     '''expression : NUM
                   | BOOL
                   | STR
+                  | indexing
                   '''
     t[0] = t[1]
 
 def p_expression_group(t):
-    'expression : LPAREN expression RPAREN'
+    '''expression : LPAREN expression RPAREN'''
     t[0] = t[2]
 
 # List
 def p_list(t):
-    '''expression : LBRACKET in_list RBRACKET'''
+    '''list : LBRACKET in_list RBRACKET'''
     t[0] = t[2]
 
 def p_in_list(t):
@@ -363,9 +376,17 @@ def p_in_list2(t):
     '''in_list : expression COMMA in_list'''
     t[3].v.insert(0,t[1])
     t[0] = t[3]
+    # t[0] = t[1] + t[3].v
+
+def p_expression_index(t):
+    ''' indexing : STR LBRACKET expression RBRACKET
+                 | list LBRACKET expression RBRACKET '''
+    t[0] = indexOp(t[1], t[3])
 
 def p_expression_binop(t):
     '''expression : expression ADD expression
+                  | STR ADD STR
+                  | list ADD list
                   | expression SUB expression
                   | expression MUL expression
                   | expression DIV expression
@@ -398,9 +419,9 @@ def p_expression_comparison(t):
     t[0] = comparisonOp(t[2], t[1], t[3])
 
 def p_expression_conjunction(t):
-    '''expression : expression OR expression
-                  | expression AND expression
-                  | expression NOT expression
+    '''expression : BOOL OR BOOL
+                  | BOOL AND BOOL
+                  | NOT BOOL
                   | expression IN expression'''
     if t[1] == 'not':
         t[0] = notOp(t[2])
@@ -412,9 +433,8 @@ def p_expression_conjunction(t):
         t[0] = inOp(t[1], t[3])
 
 def p_error(t):
-    # raise SyntaxError("SYNTAX ERROR")
-    # print("SYNTAX ERROR")
-    print("Syntax error at '%s'" % t.value)
+    raise SyntaxError("SYNTAX ERROR")
+    # print("Syntax error at '%s'" % t.value)
 
 ################################################################################
 # MAIN
