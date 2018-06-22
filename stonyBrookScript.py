@@ -37,13 +37,19 @@ class NumNode(Node):
         return self.v
 
 class ListNode(Node):
+    # def __init__(self):
+    #     self.v = []
+
     def __init__(self, v):
         self.v = [v]
 
     def evaluate(self):
         l = []
         for v in self.v:
-            l.append(v.evaluate())
+            if type(v) == list:
+                l.append(v)
+            else:
+                l.append(v.evaluate())
         return l
 
 class strNode(Node):
@@ -87,10 +93,6 @@ class orOp(Node):
             raise SemanticError()
 
 class andOp(Node):
-    def __init__(self, left):
-        self.left = left.evaluate()
-        self.right = right.evaluate()
-
     def __init__(self, left, right):
         self.left = left.evaluate()
         self.right = right.evaluate()
@@ -118,8 +120,10 @@ class comparisonOp(Node):
         self.op = op
 
     def evaluate(self):
-        if not (isinstance(self.left, int) and isinstance(self.right, int) or \
+        if not (isinstance(self.left, int) or isinstance(self.right, int) or \
             isinstance(self.left, float) and isinstance(self.right, float) or \
+            isinstance(self.left, int) and isinstance(self.right, float) or \
+            isinstance(self.left, float) and isinstance(self.right, int) or \
             isinstance(self.left, str) and isinstance(self.right, str)):
             raise SemanticError()
 
@@ -345,9 +349,10 @@ precedence = (
 
 def p_statement_expr(t):
     '''statement : expression'''
-    t[1] = t[1].evaluate()
-    if type(t[1]) == str:
-        t[1] = "'" + t[1] + "'"
+    if type(t[1]) != list:
+        t[1] = t[1].evaluate()
+        if type(t[1]) == str:
+            t[1] = "'" + t[1] + "'"
     print(t[1])
 
 def p_expression_type(t):
@@ -368,6 +373,10 @@ def p_list(t):
     '''list : LBRACKET in_list RBRACKET'''
     t[0] = t[2]
 
+def p_empty_list(t):
+    '''list : LBRACKET RBRACKET'''
+    t[0] = []
+
 def p_in_list(t):
     '''in_list : expression'''
     t[0] = ListNode(t[1])
@@ -380,7 +389,8 @@ def p_in_list2(t):
 
 def p_expression_index(t):
     ''' indexing : STR LBRACKET expression RBRACKET
-                 | list LBRACKET expression RBRACKET '''
+                 | list LBRACKET expression RBRACKET
+                 | indexing LBRACKET expression RBRACKET '''
     t[0] = indexOp(t[1], t[3])
 
 def p_expression_binop(t):
@@ -417,9 +427,9 @@ def p_expression_comparison(t):
     t[0] = comparisonOp(t[2], t[1], t[3])
 
 def p_expression_conjunction(t):
-    '''expression : BOOL OR BOOL
-                  | BOOL AND BOOL
-                  | NOT BOOL
+    '''expression : expression OR expression
+                  | expression AND expression
+                  | NOT expression
                   | expression IN expression'''
     if t[1] == 'not':
         t[0] = notOp(t[2])
