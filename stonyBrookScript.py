@@ -160,7 +160,7 @@ class addOp(Node):
             isinstance(self.left, list) and isinstance(self.right, list):
             return self.left + self.right
         else:
-            raise SyntaxError()
+            raise SemanticError()
 
 class subOp(Node):
     def __init__(self, left, right):
@@ -317,8 +317,7 @@ def t_STR(t):
     return t
 
 def t_error(t):
-    # print("SYNTAX ERROR")
-    print("Syntax error at '%s'" % t.value)
+    raise SyntaxError("SYNTAX ERROR")
 
 ################################################################################
 # PARSING RULES
@@ -356,6 +355,7 @@ def p_expression_type(t):
                   | BOOL
                   | STR
                   | indexing
+                  | list
                   '''
     t[0] = t[1]
 
@@ -385,8 +385,6 @@ def p_expression_index(t):
 
 def p_expression_binop(t):
     '''expression : expression ADD expression
-                  | STR ADD STR
-                  | list ADD list
                   | expression SUB expression
                   | expression MUL expression
                   | expression DIV expression
@@ -434,7 +432,6 @@ def p_expression_conjunction(t):
 
 def p_error(t):
     raise SyntaxError("SYNTAX ERROR")
-    # print("Syntax error at '%s'" % t.value)
 
 ################################################################################
 # MAIN
