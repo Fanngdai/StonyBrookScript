@@ -1,0 +1,80 @@
+1
+4
+2
+7.05
+3
+2 + 2
+4
+[1, 2*7, 3, 4, 5][1] + 2
+5
+5 % 2
+6
+2**2**2**2
+7
+((2+5) % 2) *8
+8
+8 - 2 * 4
+9
+2.5 * 1
+10
+16 // 2 // 2
+11
+"This is a simple string test."
+12
+'This is another simple string test.'
+13
+"This is a simple " + "string concatenation."
+14
+'This is another simple ' + 'string concatenation.'
+15
+"This is a mixed " + 'string concatenation.'
+16
+'This is another mixed ' + "string concatenation."
+17
+"This" + ' ' + "is" + ' ' + "a" + ' ' + "mixed" + " " + 'string' + " " + 'test' + ' ' + "case."
+18
+['abc', 'def', ['ghi', 'jkl', ['mno', 'pqrs', ['tuv', 'wxyz']]]][2][2][2][1][0] in 'the quick brown fox jumps over the lazy dog.' or ['abc', 'def', ['ghi', 'jkl', ['mno', 'pqrs', ['tuv', 'wxyz']]]][2][2][2][1] in 'the quick brown fox jumps over the lazy dog.' and [[[[[["substring"]]]]]][0][0][0][0][0][0] in "There is no sub-string in this string"
+19
+"a" < "b" and 'a' in "abc" and "a" + "b" + 'c' in 'a' + "b" + 'c' and not 'd' in ("abc" + ("def"[1])) and "a" + "b" < 'b' and 'abc' <> "def" and "test" == 'test' and "test1" >= 'test' and 'test'[0] <= 't'
+20
+("" in "" or ' ' in "" ) and 'abcd' <> "efgh" and 'random string' > 'another random string'
+21
+not (((1 > 2) or (1 == 1)) and (3 >= 1))
+22
+not (((1 > 2) or (1 == 1)) and (3 >= 1)) and False
+23
+not (((1 > 2) and (1 == 1)) or ((3 == 1) or (1 <> 2) ) )
+24
+not True or not False
+25
+True and False or False and True and True
+26
+not([1,2,3][0] == 1 and [[1,2],3][0][0] > 0)
+27
+("abc"[2] == "cde"[0] or False) and (False or False)
+28
+(("abc"[1] == "cde"[2] or True) and (False or True)) and (True or False)
+29
+((2.5 * 2 == 5) and (3.5 * 2 == 7)) or False
+30
+("str1" + "str2" == "str1str2") and True
+31
+[1,2,3,4,5]
+32
+['a','b','c','d']
+33
+[1,'a',2,'b',3,'c']
+34
+['Apple','is','a','company']
+35
+[1+1,'a'+'b']
+36
+[1,2,3,4,5,False,True]
+37
+[False, True,'a',False,1]
+38
+['a'=='a','b',10>9 and 10<9]
+39
+["A",[],[],[1,2,3,4]]
+40
+['aaa','bbb',[1,10//3,'aaa',[[[111,222]]]]]

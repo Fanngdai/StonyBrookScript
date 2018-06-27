@@ -1,1 +1,0 @@
-("" in "" or ' ' in "" ) and 'abcd' <> "efgh" and 'random string' > 'another random string'

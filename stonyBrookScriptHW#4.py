@@ -1,13 +1,10 @@
 '''
 Fanng Dai
-
 Stony Brook University
 CSE 307
-Homework #5
-Due Friday, June 29
+Homework #4
+Due Friday, June 22
 '''
-
-symbol_table = {}
 
 class SemanticError(Exception):
     """
@@ -20,7 +17,7 @@ class SemanticError(Exception):
 ################################################################################
 class Node(object):
     def __init__(self):
-        pass
+        print("init node")
 
     def evaluate(self):
         return 0
@@ -28,11 +25,7 @@ class Node(object):
     def execute(self):
         return 0
 
-class ExpressionNode(Node):
-    def evaluate(self):
-        return None
-
-class NumNode(ExpressionNode):
+class NumNode(Node):
     def __init__(self, v):
         if('.' in v):
             self.v = float(v)
@@ -42,7 +35,10 @@ class NumNode(ExpressionNode):
     def evaluate(self):
         return self.v
 
-class ListNode(ExpressionNode):
+class ListNode(Node):
+    # def __init__(self):
+    #     self.v = []
+
     def __init__(self, v):
         self.v = [v]
 
@@ -55,7 +51,7 @@ class ListNode(ExpressionNode):
                 l.append(v.evaluate())
         return l
 
-class strNode(ExpressionNode):
+class strNode(Node):
     def __init__(self, v):
         # Remove the quotations
         self.v = str(v)[1:-1]
@@ -63,7 +59,7 @@ class strNode(ExpressionNode):
     def evaluate(self):
         return self.v
 
-class BoolNode(ExpressionNode):
+class BoolNode(Node):
     def __init__(self, v):
         if v=='True':
             self.v = True
@@ -73,17 +69,18 @@ class BoolNode(ExpressionNode):
     def evaluate(self):
         return self.v
 
-class IDNode(ExpressionNode):
-    def __init__(self, vid):
-        self.vid = vid
-
-    def evaluate(self):
-        return symbol_table[self.vid]
+# class PrintNode(Node):
+#     def __init__(self, v):
+#         self.v = v
+#
+#     def execute(self):
+#         self.v = self.v.evaluate()
+#         print(self.v)
 
 ################################################################################
 # OPERATORS
 ################################################################################
-class orOp(ExpressionNode):
+class orOp(Node):
     def __init__(self, left, right):
         self.left = left.evaluate()
         self.right = right.evaluate()
@@ -94,7 +91,7 @@ class orOp(ExpressionNode):
         else:
             raise SemanticError()
 
-class andOp(ExpressionNode):
+class andOp(Node):
     def __init__(self, left, right):
         self.left = left.evaluate()
         self.right = right.evaluate()
@@ -105,7 +102,7 @@ class andOp(ExpressionNode):
         else:
             raise SemanticError()
 
-class notOp(ExpressionNode):
+class notOp(Node):
     def __init__(self, v):
         self.v = v.evaluate()
 
@@ -115,7 +112,7 @@ class notOp(ExpressionNode):
         else:
             raise SemanticError()
 
-class comparisonOp(ExpressionNode):
+class comparisonOp(Node):
     def __init__(self, op, left, right):
         self.left = left.evaluate()
         self.right = right.evaluate()
@@ -142,7 +139,7 @@ class comparisonOp(ExpressionNode):
         elif (self.op == '>='):
             return self.left >= self.right
 
-class inOp(ExpressionNode):
+class inOp(Node):
     def __init__(self, v1, v2):
         self.v1 = v1.evaluate()
         self.v2 = v2.evaluate()
@@ -152,7 +149,7 @@ class inOp(ExpressionNode):
         v2 = self.v2
         return v1 in v2
 
-class addOp(ExpressionNode):
+class addOp(Node):
     def __init__(self, left, right):
         self.left = left.evaluate()
         self.right = right.evaluate()
@@ -168,7 +165,7 @@ class addOp(ExpressionNode):
         else:
             raise SemanticError()
 
-class subOp(ExpressionNode):
+class subOp(Node):
     def __init__(self, left, right):
         self.left = left.evaluate()
         self.right = right.evaluate()
@@ -182,7 +179,7 @@ class subOp(ExpressionNode):
         else:
             raise SemanticError()
 
-class flDivOp(ExpressionNode):
+class flDivOp(Node):
     def __init__(self, left, right):
         self.left = left.evaluate()
         self.right = right.evaluate()
@@ -197,7 +194,7 @@ class flDivOp(ExpressionNode):
         else:
             raise SemanticError()
 
-class modOp(ExpressionNode):
+class modOp(Node):
     def __init__(self, left, right):
         self.left = left.evaluate()
         self.right = right.evaluate()
@@ -212,15 +209,15 @@ class modOp(ExpressionNode):
         else:
             raise SemanticError()
 
-class powOp(ExpressionNode):
-    def __init__(self, base, pow):
-        self.base = base.evaluate()
-        self.pow = pow.evaluate()
+class powOp(Node):
+    def __init__(self, left, right):
+        self.left = left.evaluate()
+        self.right = right.evaluate()
 
     def evaluate(self):
-        return self.base ** self.pow
+        return self.left ** self.right
 
-class mulOp(ExpressionNode):
+class mulOp(Node):
     def __init__(self, left, right):
         self.left = left.evaluate()
         self.right = right.evaluate()
@@ -234,7 +231,7 @@ class mulOp(ExpressionNode):
         else:
             raise SemanticError()
 
-class divOp(ExpressionNode):
+class divOp(Node):
     def __init__(self, left, right):
         self.left = left.evaluate()
         self.right = right.evaluate()
@@ -249,7 +246,7 @@ class divOp(ExpressionNode):
         else:
             raise SemanticError()
 
-class indexOp(ExpressionNode):
+class indexOp(Node):
     def __init__(self, v1, v2):
         self.v1 = v1.evaluate()
         self.v2 = v2.evaluate()
@@ -266,121 +263,21 @@ class indexOp(ExpressionNode):
             raise SemanticError()
 
 ################################################################################
-# CONTROL FLOW
-################################################################################
-class BlockNode(Node):
-    def __init__(self, s):
-        self.s1 = [s]
-
-    def execute(self):
-        for statement in self.s1:
-            statement.execute()
-
-class StatementNode(Node):
-    def execute(self):
-        pass
-
-class PrintNode(Node):
-    def __init__(self, v):
-        self.v = v
-
-    def execute(self):
-        print(str(self.v.evaluate()))
-
-class AssignNode(StatementNode):
-    def __init__(self, vnode, exp):
-        self.vnode = vnode
-        self.exp = exp
-
-    def execute(self):
-        symbol_table[self.vnode.vid] = self.exp.evaluate()
-
-class AssignToListNode(StatementNode):
-    def __init__(self, vnode, ind, exp):
-        self.vnode = vnode
-        self.ind = ind
-        self.exp = exp
-
-    def execute(self):
-        symbol_table[self.vnode.vid][self.ind.evaluate()] = self.exp.evaluate()
-
-class IfNode(StatementNode):
-    def __init__(self, cond, block):
-        self.cond = cond
-        self.block = block
-
-    def execute(self):
-        if(self.cond.evaluate()):
-            self.block.execute()
-
-class IfElseNode(StatementNode):
-    def __init__(self, cond, iblock, eblock):
-        self.cond = cond
-        self.iblock = iblock
-        self.eblock = eblock
-
-    def execute(self):
-        if(self.cond.evaluate()):
-            self.iblock.execute()
-        else:
-            self.eblock.execute()
-
-class WhileNode(StatementNode):
-    def __init__(self, cond, block):
-        self.cond = cond
-        self. block = block
-
-    def execute(self):
-        while self.cond.evaluate():
-            self.block.execute()
-################################################################################
 # TOKENS
 ################################################################################
-reserved = {
-    'if' : 'IF',
-    'else' : 'ELSE',
-    'while' : 'WHILE',
-    # 'not' : 'NOT',
-    # 'and' : 'AND',
-    # 'or' : 'OR',
-    # 'in' : 'IN',
-    'print' : 'PRINT'
-}
-
-tokens = [
-    'NUM', 'STR',
-    'COMMA',
-    'LPAREN', 'RPAREN',
-    'LBLOCK','RBLOCK',
-    'BOOL',
-    'POW',
-    'MUL','DIV',
-    'MOD',
-    'FLDIV',
-    'ADD','SUB',
-    'IN',
+tokens = (
+    'OR', 'AND', 'NOT', 'IN',
     'LT', 'LE', 'EQ', 'NE', 'GT', 'GE',
-    'NOT',
-    'AND',
-    'OR',
-    'ASSIGN',
-    'LBRACE', 'RBRACE',
-    'SEMI',
-    'ID'
-    ] + list(reserved.values())
+    'ADD','SUB','MUL','DIV',
+    'FLDIV', 'MOD', 'POW',
+    'LBRACKET','RBRACKET', 'COMMA',
+    'LPAREN', 'RPAREN',
+    'NUM', 'STR', 'BOOL'
+    )
 
-t_COMMA = ','
-t_LPAREN = r'\('
-t_RPAREN = r'\)'
-t_LBLOCK = r'\['
-t_RBLOCK = r'\]'
-t_POW = r'\*\*'
-t_MUL = r'\*'
-t_DIV = r'/'
-t_MOD = r'%'
-t_FLDIV = r'//'
-t_ADD = r'\+'
-t_SUB = r'-'
+t_OR = r'or'
+t_AND = r'and'
+t_NOT = r'not'
 t_IN = r'in'
 t_LT = r'<'
 t_LE = r'<='
@@ -388,20 +285,23 @@ t_EQ = r'=='
 t_NE = r'<>'
 t_GT = r'>'
 t_GE = r'>='
-t_NOT = r'not'
-t_AND = r'and'
-t_OR = r'or'
-t_ASSIGN = r'='
-t_LBRACE = r'{'
-t_RBRACE = r'}'
-t_SEMI = r';'
-
+t_ADD = r'\+'
+t_SUB = r'-'
+t_MUL = r'\*'
+t_DIV = r'/'
+t_FLDIV = r'//'
+t_MOD = r'%'
+t_POW = r'\*\*'
+t_LBRACKET = r'\['
+t_RBRACKET = r'\]'
+t_COMMA = ','
+t_LPAREN = r'\('
+t_RPAREN = r'\)'
 # Ignored characters
 t_ignore = " \t"
 
 def t_NUM(t):
-    r'-?\d*(\d\.|\.\d)\d* | -?\d+'
-    # r'\d*(\d\.|\.\d)\d* | \d+'
+    r'-?\d*(\d\.|\.\d)\d* | \d+'
     try:
         t.value = NumNode(t.value)
     except ValueError:
@@ -409,25 +309,15 @@ def t_NUM(t):
         t.value = 0
     return t
 
-def t_STR(t):
-    r'((\"[^\"]*\")|(\'[^\']*\'))'
-    t.value = strNode(t.value)
-    return t
-
 def t_BOOL(t):
     r'(True|False)'
     t.value = BoolNode(t.value)
     return t
 
-def t_ID(token):
-    r'[a-zA-Z_][a-zA-Z_0-9]*'
-    token.type = reserved.get(token.value, 'ID')
-    token.value = IDNode(token.value)
-    return token
-
-def t_newline(t):
-    r'\n+'
-    t.lexer.lineno += t.value.count("\n")
+def t_STR(t):
+    r'((\"[^\"]*\")|(\'[^\']*\'))'
+    t.value = strNode(t.value)
+    return t
 
 def t_error(t):
     raise SyntaxError("SYNTAX ERROR")
@@ -441,8 +331,6 @@ lex.lex()
 
 precedence = (
     # Lowest Associative
-    ('right', 'ASSIGN'),
-    ('left', 'PRINT'),
     ('left', 'OR' ),                                    # a or b    Boolean OR
     ('left', 'AND'),                                    # a and b   Boolean AND
     ('left', 'NOT'),                                    # not a     Boolean NOT
@@ -453,88 +341,18 @@ precedence = (
     ('left', 'MOD'),                                    # a%b       Modulus - Divides left hand operand by right hand operand and returns remainder
     ('left','MUL','DIV'),                               # a*b, a/b  Multiplication & Division
     ('right', 'POW'),                                   # a**b      Exponent Performs exponential (power) calculation on operators = a to the power b. 2**3**4= 2**(3**4) = 2417851639229258349412352
-    ('left', 'LBLOCK', 'RBLOCK'),                       # a[b]      Indexing. B may be any expression
-    ('left', 'LPAREN', 'RPAREN'),                       # (expression)  A parenthesized expression
-    ('left', 'LBRACE', 'RBRACE')
+    ('left', 'LBRACKET', 'RBRACKET'),                   # a[b]      Indexing. B may be any expression
+    ('left', 'LPAREN', 'RPAREN')                        # (expression)  A parenthesized expression
     # Highest Associative
     )
 
-def p_block(t):
-    '''block : LBRACE inblock RBRACE'''
-    t[0] = t[2]
-
-def p_emptyblock(t):
-    '''block : LBRACE RBRACE'''
-    # Literally do nothing
-    t[0] = BlockNode([])
-    t[0].s1 = []
-
-def p_inblock(t):
-    '''inblock : statement inblock'''
-    t[0] = t[2]
-    t[0].s1.insert(0, t[1])
-
-def p_inblock2(t):
-    '''inblock : statement'''
-    t[0] = BlockNode(t[1])
-
-def p_smt(t):
-    '''statement : print_smt
-                 | assign_smt
-                 | assign_to_list
-                 | if_smt
-                 | ifelse
-                 | while_smt
-                 | solo_block'''
-    t[0] = t[1]
-
-# def p_print_smt(t):
-#     '''print_smt : PRINT LPAREN expression RPAREN'''
-#     t[0] = PrintNode(t[3])
-
-def p_statement_print(t):
-    '''print_smt : PRINT LPAREN expression RPAREN SEMI %prec PRINT'''
-    t[0] = PrintNode(t[3])
-
-def p_statement_assign(t):
-    '''assign_smt : ID ASSIGN expression SEMI %prec ASSIGN'''
-    t[0] = AssignNode(t[1], t[3])
-
-def p_statement_assign_to_list(t):
-    '''assign_to_list : ID LBLOCK expression RBLOCK ASSIGN expression SEMI %prec ASSIGN'''
-    t[0] = AssignToListNode(t[1], t[3], t[6])
-
-def p_statement_while(t):
-    '''while_smt : WHILE LPAREN expression RPAREN block'''
-    t[0] = WhileNode(t[3], t[5])
-
-def p_statement_if(t):
-    '''if_smt : IF LPAREN expression RPAREN block'''
-    t[0] = IfNode(t[3], t[5])
-
-def p_statement_solo_block(t):
-    '''solo_block : block'''
-    t[0] = BlockNode(t[1])
-
-def p_statement_ifelse(t):
-    '''ifelse : if_smt ELSE block'''
-    t[0] = IfElseNode(t[1].cond, t[1].block, t[3])
-
-# def p_empty(p):
-#     '''empty : '''
-#     pass
-
-################################################################################
-# HW#4
-################################################################################
-
-# def p_statement_expr(t):
-#     '''statement : expression'''
-#     if type(t[1]) != list:
-#         t[1] = t[1].evaluate()
-#         if type(t[1]) == str:
-#             t[1] = "'" + t[1] + "'"
-#     print(t[1])
+def p_statement_expr(t):
+    '''statement : expression'''
+    if type(t[1]) != list:
+        t[1] = t[1].evaluate()
+        if type(t[1]) == str:
+            t[1] = "'" + t[1] + "'"
+    print(t[1])
 
 def p_expression_type(t):
     '''expression : NUM
@@ -542,7 +360,6 @@ def p_expression_type(t):
                   | STR
                   | indexing
                   | list
-                  | ID
                   '''
     t[0] = t[1]
 
@@ -552,11 +369,11 @@ def p_expression_group(t):
 
 # List
 def p_list(t):
-    '''list : LBLOCK in_list RBLOCK'''
+    '''list : LBRACKET in_list RBRACKET'''
     t[0] = t[2]
 
 def p_empty_list(t):
-    '''list : LBLOCK RBLOCK'''
+    '''list : LBRACKET RBRACKET'''
     t[0] = []
 
 def p_in_list(t):
@@ -567,17 +384,13 @@ def p_in_list2(t):
     '''in_list : expression COMMA in_list'''
     t[3].v.insert(0,t[1])
     t[0] = t[3]
+    # t[0] = t[1] + t[3].v
 
 def p_expression_index(t):
-    ''' indexing : STR LBLOCK expression RBLOCK
-                 | list LBLOCK expression RBLOCK
-                 | indexing LBLOCK expression RBLOCK '''
+    ''' indexing : STR LBRACKET expression RBRACKET
+                 | list LBRACKET expression RBRACKET
+                 | indexing LBRACKET expression RBRACKET '''
     t[0] = indexOp(t[1], t[3])
-
-def p_expression_maybeSub(t):
-    '''expression : NUM NUM'''
-    if t[2].evaluate() < 0:
-        t[0] = addOp(t[1], t[2])
 
 def p_expression_binop(t):
     '''expression : expression ADD expression
@@ -587,6 +400,7 @@ def p_expression_binop(t):
                   | expression FLDIV expression
                   | expression MOD expression
                   | expression POW expression'''
+    # t[0] = ('+', t[1], t[3])
     if t[2] == '+':
         t[0] = addOp(t[1], t[3])
     elif t[2] == '-':
@@ -626,8 +440,7 @@ def p_expression_conjunction(t):
         t[0] = inOp(t[1], t[3])
 
 def p_error(t):
-    print("###")
-    raise SyntaxError
+    raise SyntaxError("SYNTAX ERROR")
 
 ################################################################################
 # MAIN
@@ -646,14 +459,20 @@ except(IOError):
     exit()
 
 # Parse & print
-try:
-    ast = yacc.parse(file.read())
-    ast.execute()
-except SemanticError:
-    print("SEMANTIC ERROR A")
-except SyntaxError:
-    print("SYNTAX ERROR B")
-except Exception:
-    print("SEMANTIC ERROR C")
+for line in file:
+    try:
+        l = line.strip()
+        lex.input(l)
+        while True:
+            token = lex.token()
+            if not token:
+                break
+        ast = yacc.parse(l)
+        # ast.execute()
+        # parser.parse(l)
+    except SemanticError:
+        print("SEMANTIC ERROR")
+    except Exception:
+        print("SYNTAX ERROR")
 
 file.close()
