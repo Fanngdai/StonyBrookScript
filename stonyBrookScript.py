@@ -149,7 +149,7 @@ class ComparisonOp(ExpressionNode):
         else:
             raise SemanticError()
 
-class ContainsNode(ExpressionNode):
+class ContainsOp(ExpressionNode):
     def __init__(self, obj, tgt):
         self.obj = obj
         self.tgt = tgt
@@ -218,7 +218,7 @@ class MulOp(Node):
         else:
             raise SemanticError()
 
-class Div_FlDiv_ModOp(Node):
+class DivOp(Node):
     def __init__(self, op, left, right):
         self.left = left
         self.right = right
@@ -242,7 +242,7 @@ class Div_FlDiv_ModOp(Node):
         else:
             raise SemanticError()
 
-class IndexNode(ExpressionNode):
+class IndexOp(ExpressionNode):
     def __init__(self, obj, ind):
         self.obj = obj
         self.ind = ind
@@ -261,7 +261,7 @@ class IndexNode(ExpressionNode):
             raise SemanticError()
 
 # NOT NEEDED
-class UnaryOpNode(ExpressionNode):
+class UnaryOp(ExpressionNode):
     def __init__(self, op, val):
         self.op = op
         self.val = val
@@ -497,26 +497,22 @@ def p_statement_if(t):
     '''if_smt : IF LPAREN expression RPAREN block'''
     t[0] = IfNode(t[3], t[5])
 
-def p_statement_solo_block(t):
-    '''solo_block : block'''
-    t[0] = BlockNode(t[1])
-
 def p_statement_ifelse(t):
     '''ifelse : if_smt ELSE block'''
     t[0] = IfElseNode(t[1].cond, t[1].block, t[3])
 
-def p_empty(t):
-    '''empty : '''
-    pass
+def p_statement_solo_block(t):
+    '''solo_block : block'''
+    t[0] = BlockNode(t[1])
 
 def p_expression_inlist(t):
     '''expression : expression IN expression %prec IN'''
-    t[0] = ContainsNode(t[3], t[1])
+    t[0] = ContainsOp(t[3], t[1])
 
 def p_expression_index(t):
     '''expression : STRING LBLOCK expression RBLOCK
                   | expression LBLOCK expression RBLOCK %prec INDEX'''
-    t[0] = IndexNode(t[1], t[3])
+    t[0] = IndexOp(t[1], t[3])
 
 def p_expression_group(t):
     '''expression : LPAREN expression RPAREN'''
@@ -534,21 +530,23 @@ def p_expression_list2(t):
 
 def p_expression_term(t):
     '''term : COMMA expression term'''
-    t[0] = t[2]
-    t[3].insert(0,t[0])
+    t[3].insert(0,t[2])
     t[0] = t[3]
 
 def p_expression_term2(t):
     '''term : empty %prec LIST'''
     t[0] = []
 
-def p_emptyblock(t):
-    '''
-    block : LBRACE RBRACE
-    '''
-    # Literally do nothing
-    t[0] = BlockNode([])
-    t[0].s1 = []
+def p_empty(t):
+    '''empty : '''
+    pass
+
+def p_expression_type(t):
+    '''expression : STRING
+                  | NUM
+                  | BOOL
+                  | ID'''
+    t[0] = t[1]
 
 def p_expression_compare(t):
     ''' expression : expression LT expression
@@ -564,7 +562,7 @@ def p_expression_boolop(t):
                   | expression OR expression'''
     t[0] = BoolOp(t[2], t[1], t[3])
 
-def p_expression_unot(t):
+def p_expression_not(t):
     '''expression : NOT expression %prec NOT'''
     t[0] = NotOp(t[1], t[2])
 
@@ -584,7 +582,7 @@ def p_expression_div(t):
     '''expression : expression DIV expression
                   | expression MOD expression
                   | expression FLDIV expression'''
-    t[0] = Div_FlDiv_ModOp(t[2], t[1], t[3])
+    t[0] = DivOp(t[2], t[1], t[3])
 
 def p_expression_pow(t):
     '''expression : expression POW expression'''
@@ -592,14 +590,7 @@ def p_expression_pow(t):
 
 # def p_expression_unaryminus(t):
 #     '''expression : SUB expression %prec UMINUS'''
-#     t[0] = UnaryOpNode(t[1], t[2])
-
-def p_expression_type(t):
-    '''expression : STRING
-                  | NUM
-                  | BOOL
-                  | ID'''
-    t[0] = t[1]
+#     t[0] = UnaryOp(t[1], t[2])
 
 def p_error(t):
     # print(t)
