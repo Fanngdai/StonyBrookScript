@@ -260,9 +260,7 @@ class IndexNode(ExpressionNode):
         else:
             raise SemanticError()
 
-################################################################################
 # NOT NEEDED
-################################################################################
 class UnaryOpNode(ExpressionNode):
     def __init__(self, op, val):
         self.op = op
@@ -301,7 +299,7 @@ class IfNode(StatementNode):
         self.block = block
 
     def execute(self):
-        if(self.cond.evaluate()):
+        if self.cond.evaluate():
             self.block.execute()
 
 class IfElseNode(StatementNode):
@@ -311,7 +309,7 @@ class IfElseNode(StatementNode):
         self.eblock = eblock
 
     def execute(self):
-        if(self.cond.evaluate()):
+        if self.cond.evaluate():
             self.iblock.execute()
         else:
             self.eblock.execute()
@@ -352,12 +350,12 @@ tokens = [
     'LPAREN', 'RPAREN',
     'LBLOCK', 'RBLOCK',
     'BOOL',
-    'EXP',
-    'MULT', 'DIV',
+    'POW',
+    'MUL', 'DIV',
     'MOD',
-    'INTDIV',
+    'FLDIV',
     'ADD', 'SUB',
-    'LESS', 'LESSEQ', 'EQUAL', 'NOTEQUAL', 'GREATER', 'GREATEREQ',
+    'LT', 'LE', 'EQ', 'NE', 'GT', 'GE',
     'ASSIGN',
     'LBRACE', 'RBRACE',
     'SEMI',
@@ -369,19 +367,19 @@ t_LPAREN = r'\('
 t_RPAREN = r'\)'
 t_LBLOCK = r'\['
 t_RBLOCK = r'\]'
-t_EXP = r'\*\*'
-t_MULT = r'\*'
+t_POW = r'\*\*'
+t_MUL = r'\*'
 t_DIV = r'/'
 t_MOD = r'%'
-t_INTDIV = r'//'
+t_FLDIV = r'//'
 t_ADD = r'\+'
 t_SUB = r'-'
-t_LESS = r'<'
-t_LESSEQ = r'<='
-t_EQUAL = r'=='
-t_NOTEQUAL = r'<>'
-t_GREATER = r'>'
-t_GREATEREQ = r'>='
+t_LT = r'<'
+t_LE = r'<='
+t_EQ = r'=='
+t_NE = r'<>'
+t_GT = r'>'
+t_GE = r'>='
 t_ASSIGN = r'='
 t_LBRACE = r'{'
 t_RBRACE = r'}'
@@ -397,29 +395,30 @@ def t_NUM(t):
         t.value = 0
     return t
 
-def t_STRING(token):
+def t_STRING(t):
     r'(\"[^\"]*\") | (\'[^\']*\')'
-    token.value = StringNode(token.value)
-    return token
+    t.value = StringNode(t.value)
+    return t
 
-def t_BOOL(token):
+def t_BOOL(t):
     r'True|False'
-    token.value = BoolNode(token.value)
-    return token
+    t.value = BoolNode(t.value)
+    return t
 
-def t_ID(token):
+def t_ID(t):
     r'[a-zA-Z_][a-zA-Z_0-9]*'
-    token.type = reserved.get(token.value, 'ID')
-    token.value = IDNode(token.value)
-    return token
+    t.type = reserved.get(t.value, 'ID')
+    t.value = IDNode(t.value)
+    return t
 
 def t_newline(t):
     r'\n+'
     t.lexer.lineno += t.value.count("\n")
 
-def t_error(token):
-    print("Illegal character '%s'" % token.value[0])
-    token.lexer.skip(1)
+def t_error(t):
+    raise SyntaxError
+    # print("Illegal character '%s'" % t.value[0])
+    # t.lexer.skip(1)
 
 ################################################################################
 # PARSING RULES
@@ -435,15 +434,14 @@ precedence = (
     ('left', 'OR' ),                                    # a or b    Boolean OR
     ('left', 'AND'),                                    # a and b   Boolean AND
     ('left', 'NOT'),                                    # not a     Boolean NOT
-    ('left', 'UNOT'),
-    ('left', 'LESS', 'LESSEQ', 'EQUAL', 'NOTEQUAL', 'GREATER', 'GREATEREQ'),    # a<b, a<=b, a==b, a<>b, a>b, a>=b  Comparison (works for numbers and strings like in python)
+    ('left', 'LT', 'LE', 'EQ', 'NE', 'GT', 'GE'),       # a<b, a<=b, a==b, a<>b, a>b, a>=b  Comparison (works for numbers and strings like in python)
     ('left', 'IN'),                                     # a in b    Evaluates to true if it find a variable in the specified sequence and false o.w.
     ('left', 'ADD', 'SUB'),                             # a+b, a-b  Addition & Subtraction
-    ('left', 'INTDIV'),                                 # a//b      Floor Division, - The division of operands where the result is quotient in which the digits after the decimal point are removed
+    ('left', 'FLDIV'),                                  # a//b      Floor Division, - The division of operands where the result is quotient in which the digits after the decimal point are removed
     # ('left', 'UMINUS'),
     ('left', 'MOD'),                                    # a%b       Modulus - Divides left hand operand by right hand operand and returns remainder
-    ('left', 'MULT', 'DIV'),                            # a*b, a/b  Multiplication & Division
-    ('right', 'EXP'),                                   # a**b      Exponent Performs exponential (power) calculation on operators = a to the power b. 2**3**4= 2**(3**4) = 2417851639229258349412352
+    ('left', 'MUL', 'DIV'),                             # a*b, a/b  Multiplication & Division
+    ('right', 'POW'),                                   # a**b      Exponent Performs exponential (power) calculation on operators = a to the power b. 2**3**4= 2**(3**4) = 2417851639229258349412352
     ('left', 'LBLOCK', 'RBLOCK'),                       # a[b]      Indexing. B may be any expression
     ('left', 'LIST'),
     ('left', 'INDEX')
@@ -507,7 +505,7 @@ def p_statement_ifelse(t):
     '''ifelse : if_smt ELSE block'''
     t[0] = IfElseNode(t[1].cond, t[1].block, t[3])
 
-def p_empty(p):
+def p_empty(t):
     '''empty : '''
     pass
 
@@ -553,12 +551,12 @@ def p_emptyblock(t):
     t[0].s1 = []
 
 def p_expression_compare(t):
-    ''' expression : expression LESS expression
-                   | expression LESSEQ expression
-                   | expression EQUAL expression
-                   | expression NOTEQUAL expression
-                   | expression GREATER expression
-                   | expression GREATEREQ expression'''
+    ''' expression : expression LT expression
+                   | expression LE expression
+                   | expression EQ expression
+                   | expression NE expression
+                   | expression GT expression
+                   | expression GE expression'''
     t[0] = ComparisonOp(t[2], t[1], t[3])
 
 def p_expression_boolop(t):
@@ -567,7 +565,7 @@ def p_expression_boolop(t):
     t[0] = BoolOp(t[2], t[1], t[3])
 
 def p_expression_unot(t):
-    '''expression : NOT expression %prec UNOT'''
+    '''expression : NOT expression %prec NOT'''
     t[0] = NotOp(t[1], t[2])
 
 def p_expression_AddSub(t):
@@ -578,18 +576,18 @@ def p_expression_AddSub(t):
     elif t[2] == '-':
         t[0] = SubOp(t[1], t[3])
 
-def p_expression_mult(t):
-    '''expression : expression MULT expression'''
+def p_expression_mul(t):
+    '''expression : expression MUL expression'''
     t[0] = MulOp(t[1], t[3])
 
 def p_expression_div(t):
     '''expression : expression DIV expression
                   | expression MOD expression
-                  | expression INTDIV expression'''
+                  | expression FLDIV expression'''
     t[0] = Div_FlDiv_ModOp(t[2], t[1], t[3])
 
-def p_expression_exp(t):
-    '''expression : expression EXP expression'''
+def p_expression_pow(t):
+    '''expression : expression POW expression'''
     t[0] = PowOp(t[1], t[3])
 
 # def p_expression_unaryminus(t):
@@ -603,8 +601,8 @@ def p_expression_type(t):
                   | ID'''
     t[0] = t[1]
 
-def p_error(p):
-    print(p)
+def p_error(t):
+    # print(t)
     raise SyntaxError
 
 ################################################################################
