@@ -1,0 +1,17 @@
+The program will print:
+
+[2, 50, 3, 300]
+
+Printing strings should execute as in python (no quotes around single strings printed and single quotes around strings in lists):
+
+{print("a");}
+
+the output should be:
+
+a
+
+{print([1, "a", 2]);}
+
+the output should be:
+
+[1, 'a', 2]
