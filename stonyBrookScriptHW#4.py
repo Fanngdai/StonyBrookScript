@@ -36,9 +36,6 @@ class NumNode(Node):
         return self.v
 
 class ListNode(Node):
-    # def __init__(self):
-    #     self.v = []
-
     def __init__(self, v):
         self.v = [v]
 
@@ -68,14 +65,6 @@ class BoolNode(Node):
 
     def evaluate(self):
         return self.v
-
-# class PrintNode(Node):
-#     def __init__(self, v):
-#         self.v = v
-#
-#     def execute(self):
-#         self.v = self.v.evaluate()
-#         print(self.v)
 
 ################################################################################
 # OPERATORS
@@ -468,8 +457,6 @@ for line in file:
             if not token:
                 break
         ast = yacc.parse(l)
-        # ast.execute()
-        # parser.parse(l)
     except SemanticError:
         print("SEMANTIC ERROR")
     except Exception:
